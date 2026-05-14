@@ -4,7 +4,26 @@
 #include <windows.h>
 #include <process.h>
 #include <locale.h>
-
+#include <sddl.h>
+SECURITY_ATTRIBUTES* GetAllowAllSecurityAttributes() {
+    static SECURITY_ATTRIBUTES sa;
+    static BOOL initialized = FALSE;
+    if (!initialized) {
+        // NULL DACL — доступ разрешён всем
+        PSECURITY_DESCRIPTOR pSD = NULL;
+        if (ConvertStringSecurityDescriptorToSecurityDescriptor(
+            "D:(A;;GA;;;WD)",  // Allow Generic All to Everyone (WD)
+            SDDL_REVISION_1,
+            &pSD,
+            NULL)) {
+            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+            sa.lpSecurityDescriptor = pSD;
+            sa.bInheritHandle = FALSE;
+        }
+        initialized = TRUE;
+    }
+    return &sa;
+}
 #define PIPE_NAME "\\\\.\\pipe\\LocalChatPipe"
 #define MAILSLOT_NAME "\\\\.\\mailslot\\LocalChatMailslot"
 #define BROADCAST_MAILSLOT "\\\\*\\mailslot\\LocalChatMailslot"
@@ -114,7 +133,7 @@ void Client_ChatMode(const char* serverIP) {
 
     HANDLE hPipe;
     while (1) {
-        hPipe = CreateFileA(pipePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+        hPipe = CreateFileA(pipePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, GetAllowAllSecurityAttributes());
         if (hPipe != INVALID_HANDLE_VALUE) break;
         if (GetLastError() != ERROR_PIPE_BUSY) {
             printf("Не удалось подключиться к серверу %s\n", serverIP);
