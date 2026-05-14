@@ -1,2 +1,7 @@
 [You]: хай
 [Client]: хай
+[Broadcast]: dfsfsdfs
+[Вы]: rrf
+[Входящее]: rrf
+[Вы]: rfrfr
+[Входящее]: rfrfr

@@ -1,7 +1,11 @@
-﻿#include <stdio.h>
+﻿#define _WIN32_WINNT 0x0600
+#include <windows.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
+#include <process.h>
+#include <locale.h>
+#include <sddl.h>
 
 #define PIPE_NAME "\\\\.\\pipe\\LocalChatPipe"
 #define MAILSLOT_NAME "\\\\.\\mailslot\\LocalChatMailslot"
@@ -10,6 +14,26 @@
 
 // Критическая секция для потокобезопасной записи в файл истории
 CRITICAL_SECTION csHistory;
+
+SECURITY_ATTRIBUTES* GetAllowAllSecurityAttributes() {
+    static SECURITY_ATTRIBUTES sa;
+    static BOOL initialized = FALSE;
+    if (!initialized) {
+        // NULL DACL — доступ разрешён всем
+        PSECURITY_DESCRIPTOR pSD = NULL;
+        if (ConvertStringSecurityDescriptorToSecurityDescriptor(
+            "D:(A;;GA;;;WD)",  // Allow Generic All to Everyone (WD)
+            SDDL_REVISION_1,
+            &pSD,
+            NULL)) {
+            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+            sa.lpSecurityDescriptor = pSD;
+            sa.bInheritHandle = FALSE;
+        }
+        initialized = TRUE;
+    }
+    return &sa;
+}
 
 // Функция для сохранения переписки (Пункт 4)
 void SaveToHistory(const char* sender, const char* message) {
@@ -107,7 +131,7 @@ DWORD WINAPI PipeServerThread(LPVOID lpParam) {
             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
             PIPE_UNLIMITED_INSTANCES, // Пункт 6: несколько клиентов
             BUF_SIZE, BUF_SIZE,
-            0, NULL);
+            0, GetAllowAllSecurityAttributes());
 
         if (hPipe == INVALID_HANDLE_VALUE) {
             Sleep(1000);
@@ -163,6 +187,7 @@ void Client_ChatMode(const char* serverName) {
 
         if (GetLastError() != ERROR_PIPE_BUSY) {
             printf("Не удалось найти компьютер '%s' или сервер не запущен.\n", serverName);
+            GetLastError();
             return;
         }
         WaitNamedPipeA(pipePath, 5000);
