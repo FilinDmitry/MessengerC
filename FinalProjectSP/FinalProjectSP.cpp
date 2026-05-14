@@ -11,7 +11,27 @@
 #include <string.h>
 #include <process.h>
 #include <locale.h>
+#include <sddl.h>
 
+SECURITY_ATTRIBUTES* GetAllowAllSecurityAttributes() {
+    static SECURITY_ATTRIBUTES sa;
+    static BOOL initialized = FALSE;
+    if (!initialized) {
+        // NULL DACL — доступ разрешён всем
+        PSECURITY_DESCRIPTOR pSD = NULL;
+        if (ConvertStringSecurityDescriptorToSecurityDescriptor(
+            L"D:(A;;GA;;;WD)",  // Allow Generic All to Everyone (WD)
+            SDDL_REVISION_1,
+            &pSD,
+            NULL)) {
+            sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+            sa.lpSecurityDescriptor = pSD;
+            sa.bInheritHandle = FALSE;
+        }
+        initialized = TRUE;
+    }
+    return &sa;
+}
 #pragma comment(lib, "ws2_32.lib")
 
  // ======================== Настройки ========================
@@ -123,8 +143,7 @@ void HandleCommand(char* cmdLine) {
         }
         char pipeName[512];
         sprintf(pipeName, "\\\\%s\\pipe\\MyP2PChat", arg1);
-        hCurrentPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0,
-            NULL, OPEN_EXISTING, 0, NULL);
+        hCurrentPipe = CreateFile(pipeName, GENERIC_READ | GENERIC_WRITE, 0,NULL, OPEN_EXISTING, 0, NULL);
         if (hCurrentPipe == INVALID_HANDLE_VALUE) {
             printf("Не удалось подключиться к '%s'. Ошибка %d\n", arg1, GetLastError());
             return;
@@ -308,7 +327,8 @@ DWORD WINAPI ServerThread(LPVOID lpParam) {
             PIPE_ACCESS_DUPLEX,
             PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
             PIPE_UNLIMITED_INSTANCES,
-            BUFFER_SIZE, BUFFER_SIZE, 0, NULL);
+            BUFFER_SIZE, BUFFER_SIZE, 0,
+            GetAllowAllSecurityAttributes());
 
         if (hPipe == INVALID_HANDLE_VALUE) {
             printf("Ошибка создания канала: %d\n", GetLastError());
