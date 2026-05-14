@@ -20,7 +20,7 @@ SECURITY_ATTRIBUTES* GetAllowAllSecurityAttributes() {
         // NULL DACL — доступ разрешён всем
         PSECURITY_DESCRIPTOR pSD = NULL;
         if (ConvertStringSecurityDescriptorToSecurityDescriptor(
-            L"D:(A;;GA;;;WD)",  // Allow Generic All to Everyone (WD)
+            "D:(A;;GA;;;WD)",  // Allow Generic All to Everyone (WD)
             SDDL_REVISION_1,
             &pSD,
             NULL)) {
