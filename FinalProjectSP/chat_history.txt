@@ -9,3 +9,5 @@
 [ֲû]: chat_history.txt
 [Broadcast]: ־בשטי סבמנ
 [Broadcast]: ־בשטי סבמנ
+[ֲû]: dfs
+[ֲû]: grthetr

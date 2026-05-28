@@ -298,7 +298,7 @@ int main() {
 
     InitializeCriticalSection(&csHistory);
 
-    // Узнаем имя компьютера
+
     char myComputerName[MAX_COMPUTERNAME_LENGTH + 1];
     DWORD nameSize = sizeof(myComputerName);
     GetComputerNameA(myComputerName, &nameSize);
@@ -308,7 +308,7 @@ int main() {
     printf("Сообщите его собеседнику для подключения.\n");
     printf("=========================================\n");
 
-    // Запуск серверных потоков (приложение работает как P2P узел)
+
     CreateThread(NULL, 0, PipeServerThread, NULL, 0, NULL);
     CreateThread(NULL, 0, MailslotServerThread, NULL, 0, NULL);
 
@@ -352,15 +352,17 @@ int main() {
             exit(0);
         }
 
-        if (strcmp(choice, "/h\n") == 0 || choice[0] == 'h') {
+        if (strcmp(choice, "/h\n") == 0) {
             printf("\n--- Список команд ---\n");
             printf("/connect Подключиться к ПК по имени (Чат / Файлы)\n");
             printf("/broadcast Отправить сообщение ВСЕМ в сети (Broadcast)\n");
             printf("/history Просмотреть историю переписки\n");
-            printf("/exit Выйти из приложения\n\n");
+            printf("/exit Выйти из приложения\n");
+            printf("============================================================\n");
             continue;
         }
-        printf("команда %s не существует\n", choice);
+        printf("не найдена команда %s", choice);
+        printf("Для справки введите /h\n");
     }
 
     DeleteCriticalSection(&csHistory);
