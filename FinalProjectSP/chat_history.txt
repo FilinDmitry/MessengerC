@@ -7,3 +7,5 @@
 [Входящее]: rfrfr
 [Вы]: Объявляю гойду
 [Вы]: chat_history.txt
+[Broadcast]: Общий сбор
+[Broadcast]: Общий сбор

@@ -181,7 +181,7 @@ void Client_ChatMode(const char* serverName) {
     HANDLE hPipe;
     printf("Попытка подключения к %s...\n", serverName);
 
-    while (1) {
+    while (TRUE) {
         hPipe = CreateFileA(pipePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
         if (hPipe != INVALID_HANDLE_VALUE) break;
 
@@ -204,10 +204,10 @@ void Client_ChatMode(const char* serverName) {
     printf("Пишите сообщения. Для отправки файла введите: /file ИМЯ_ФАЙЛА\n");
     printf("Для выхода введите: выход\n");
 
-    while (1) {
+    while (TRUE) {
         printf("Вы: ");
         fgets(message, BUF_SIZE, stdin);
-        message[strcspn(message, "\n")] = 0; // Удаляем newline
+        message[strcspn(message, "\n")] = 0;
 
         if (strcmp(message, "выход") == 0) {
             WriteFile(hPipe, message, strlen(message), &bytesWritten, NULL);
@@ -312,22 +312,13 @@ int main() {
     CreateThread(NULL, 0, PipeServerThread, NULL, 0, NULL);
     CreateThread(NULL, 0, MailslotServerThread, NULL, 0, NULL);
 
-    int choice;
+    char choice[128];
     char targetName[128];
 
-    while (1) {
-        printf("\n--- ГЛАВНОЕ МЕНЮ ---\n");
-        printf("1. Подключиться к ПК по имени (Чат / Файлы)\n");
-        printf("2. Отправить сообщение ВСЕМ в сети (Broadcast)\n");
-        printf("3. Просмотреть историю переписки\n");
-        printf("0. Выйти из приложения\n");
-        printf("Ваш выбор: ");
 
-        if (scanf("%d", &choice) != 1) break;
-        while (getchar() != '\n'); // Очистка буфера
-
-        switch (choice) {
-        case 1:
+    while (TRUE) {
+        fgets(choice, sizeof(choice), stdin);
+        if (strncmp(choice, "/connect", 8) == 0) {
             printf("Введите ИМЯ КОМПЬЮТЕРА (или '.' для локального теста): ");
             fgets(targetName, sizeof(targetName), stdin);
             targetName[strcspn(targetName, "\n")] = 0;
@@ -335,11 +326,13 @@ int main() {
             if (strlen(targetName) > 0) {
                 Client_ChatMode(targetName);
             }
-            break;
-        case 2:
+            continue;
+        }
+        if (strncmp(choice, "/broadcast", 9) == 0) {
             Client_BroadcastMsg();
-            break;
-        case 3: {
+            continue;
+        }
+        if (strncmp(choice, "/history", 8) == 0) {
             EnterCriticalSection(&csHistory);
             FILE* f = fopen("chat_history.txt", "r");
             if (f) {
@@ -352,14 +345,22 @@ int main() {
                 printf("История пока пуста.\n");
             }
             LeaveCriticalSection(&csHistory);
-            break;
+            continue;
         }
-        case 0:
+        if (strncmp(choice, "/exit", 5) == 0) {
             DeleteCriticalSection(&csHistory);
             exit(0);
-        default:
-            printf("Неверный выбор.\n");
         }
+
+        if (strcmp(choice, "/h\n") == 0 || choice[0] == 'h') {
+            printf("\n--- Список команд ---\n");
+            printf("/connect Подключиться к ПК по имени (Чат / Файлы)\n");
+            printf("/broadcast Отправить сообщение ВСЕМ в сети (Broadcast)\n");
+            printf("/history Просмотреть историю переписки\n");
+            printf("/exit Выйти из приложения\n\n");
+            continue;
+        }
+        printf("команда %s не существует\n", choice);
     }
 
     DeleteCriticalSection(&csHistory);
