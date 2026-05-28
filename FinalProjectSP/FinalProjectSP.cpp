@@ -273,17 +273,15 @@ void Client_ChatMode(const char* serverName) {
 }
 
 // Отправка бродкаст сообщения (Пункт 5)
-void Client_BroadcastMsg() {
+void Client_BroadcastMsg(char text[128]) {
     HANDLE hFile = CreateFileA(BROADCAST_MAILSLOT, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
         printf("Ошибка открытия Mailslot для отправки Broadcast.\n");
         return;
     }
-
-    char message[BUF_SIZE];
+    char* message = text + 10;
     DWORD bytesWritten;
-    printf("Введите широковещательное сообщение: ");
-    fgets(message, BUF_SIZE, stdin);
+    //fgets(message, BUF_SIZE, stdin);
     message[strcspn(message, "\n")] = 0;
 
     WriteFile(hFile, message, strlen(message), &bytesWritten, NULL);
@@ -318,9 +316,8 @@ int main() {
 
     while (TRUE) {
         fgets(choice, sizeof(choice), stdin);
-        if (strncmp(choice, "/connect", 8) == 0) {
-            printf("Введите ИМЯ КОМПЬЮТЕРА (или '.' для локального теста): ");
-            fgets(targetName, sizeof(targetName), stdin);
+        if (strncmp(choice, "/connect ", 9) == 0) {
+            char* targetName = choice + 9;
             targetName[strcspn(targetName, "\n")] = 0;
 
             if (strlen(targetName) > 0) {
@@ -328,8 +325,8 @@ int main() {
             }
             continue;
         }
-        if (strncmp(choice, "/broadcast", 9) == 0) {
-            Client_BroadcastMsg();
+        if (strncmp(choice, "/broadcast ", 10) == 0) {
+            Client_BroadcastMsg(choice);
             continue;
         }
         if (strncmp(choice, "/history", 8) == 0) {
@@ -354,8 +351,8 @@ int main() {
 
         if (strcmp(choice, "/h\n") == 0) {
             printf("\n--- Список команд ---\n");
-            printf("/connect Подключиться к ПК по имени (Чат / Файлы)\n");
-            printf("/broadcast Отправить сообщение ВСЕМ в сети (Broadcast)\n");
+            printf("/connect <Имя ПК> Подключиться к ПК по имени (Чат / Файлы)\n");
+            printf("/broadcast <сообщение> Отправить сообщение ВСЕМ в сети\n");
             printf("/history Просмотреть историю переписки\n");
             printf("/exit Выйти из приложения\n");
             printf("============================================================\n");

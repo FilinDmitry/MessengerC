@@ -11,3 +11,11 @@
 [Broadcast]: Общий сбор
 [Вы]: dfs
 [Вы]: grthetr
+[Входящее]: Зачем мне вирусы отправил
+[Вы]: ок сейчас исправим
+[Broadcast]: hai
+[Broadcast]: ав
+[Broadcast]: ав
+[Broadcast]:  321
+[Broadcast]:  321
+[Вы]: asdf
