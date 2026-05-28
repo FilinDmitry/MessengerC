@@ -57,7 +57,7 @@ DWORD WINAPI ClientHandlerThread(LPVOID lpParam) {
     while (ReadFile(hPipe, buffer, BUF_SIZE - 1, &bytesRead, NULL) && bytesRead != 0) {
         buffer[bytesRead] = '\0';
 
-        // Обработка текстового сообщения
+        // Обработка текстового сообщения 
         if (strncmp(buffer, "MSG:", 4) == 0) {
             printf("\n[Входящее сообщение]: %s\n", buffer + 4);
             SaveToHistory("Входящее", buffer + 4);
